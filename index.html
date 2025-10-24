@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tripkik - L'Évaluation Péi</title>
+    <title>Tripkik - Évaluation Flash</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/gif.js/dist/gif.js"></script> 
     <style>
-        /* Couleurs du drapeau Réunionnais via variables CSS */
+        /* Couleurs du drapeau Réunionnais */
         :root {
-            --color-reunion-blue: #0077B6;   /* Bleu Océan */
-            --color-reunion-yellow: #FFC107; /* Jaune Soleil */
-            --color-reunion-red: #D80000;    /* Rouge Volcan */
-            --color-reunion-green: #28A745;  /* Vert Nature */
+            --color-reunion-blue: #0077B6;   
+            --color-reunion-yellow: #FFC107; 
+            --color-reunion-red: #D80000;    
+            --color-reunion-green: #28A745;  
         }
         .bg-reunion-blue { background-color: var(--color-reunion-blue); }
         .text-reunion-blue { color: var(--color-reunion-blue); }
@@ -23,66 +23,61 @@
         .bg-reunion-green { background-color: var(--color-reunion-green); }
 
         body { font-family: 'Poppins', sans-serif; }
-        #camera { 
-            width: 100%; 
-            height: 60vh; 
-            object-fit: cover; 
-            border: 4px solid var(--color-reunion-blue); 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2); 
-        }
-        .btn { transition: all 0.3s ease-in-out; transform: scale(1); border: none; cursor: pointer; }
-        .btn:hover { transform: scale(1.02); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
-        .btn:active { transform: scale(0.98); }
-        .btn-score { border: 2px solid transparent; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .btn-score:hover { border-color: rgba(255,255,255,0.8); }
-
-        /* Style pour l'indicateur de chargement GIF */
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid var(--color-reunion-yellow);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        #camera { width: 100%; height: 60vh; object-fit: cover; border: 4px solid var(--color-reunion-blue); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+        .btn { transition: all 0.3s ease-in-out; }
+        .loading-spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid var(--color-reunion-yellow); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .gif-preview { display: block; margin: 20px auto; max-width: 100%; }
     </style>
 </head>
 <body class="bg-gray-100 flex flex-col min-h-screen">
     
-    <header class="bg-reunion-blue text-white p-6 shadow-lg text-center relative z-10">
-        <h1 class="text-3xl font-bold tracking-wide">Tripkik</h1>
-        <p class="text-lg mt-1 italic opacity-90">Pas content ? Tripkik !</p>
+    <header class="bg-reunion-blue text-white p-6 shadow-lg relative z-10">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-3xl font-bold tracking-wide">Tripkik</h1>
+            <nav class="space-x-4 text-sm font-semibold">
+                <a href="#home" class="hover:underline">HOME</a>
+                <a href="#historique" class="hover:underline">HISTORIQUE</a>
+            </nav>
+        </div>
     </header>
 
     <main id="app" class="flex-grow p-4 md:p-8 space-y-6 max-w-2xl mx-auto w-full">
-        <video id="camera" autoplay class="rounded-xl shadow-lg hidden"></video>
-        
-        <div id="status" class="bg-reunion-yellow text-gray-900 p-4 rounded-lg font-semibold text-center text-lg shadow-md transition-all duration-300 ease-in-out">
-            Cliquez sur le bouton pour démarrer et autoriser la caméra.
-        </div>
+        <section id="home-view">
+            <h2 class="text-2xl font-bold mb-4 text-center">Évaluation Flash</h2>
+            <video id="camera" autoplay class="rounded-xl shadow-lg hidden"></video>
+            
+            <div id="status" class="bg-reunion-yellow text-gray-900 p-4 rounded-lg font-semibold text-center text-lg shadow-md transition-all duration-300 ease-in-out">
+                Cliquez sur le bouton pour démarrer et autoriser la caméra.
+            </div>
 
-        <button id="mainBtn" class="btn w-full bg-reunion-green text-white p-5 rounded-xl text-xl font-bold uppercase tracking-wider shadow-lg hover:bg-green-700">
-            Prêt ? (Démarre la Cam)
-        </button>
+            <button id="mainBtn" class="btn w-full bg-reunion-green text-white p-5 rounded-xl text-xl font-bold uppercase tracking-wider shadow-lg hover:bg-green-700">
+                Prêt ? (Démarre la Cam)
+            </button>
 
-        <div id="scoreBtns" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-            <button class="btn-score bg-reunion-blue text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-blue-700" onclick="finalize(4)">4</button>
-            <button class="btn-score bg-reunion-green text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-green-700" onclick="finalize(3)">3</button>
-            <button class="btn-score bg-reunion-yellow text-gray-900 p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-yellow-600" onclick="finalize(2)">2</button>
-            <button class="btn-score bg-reunion-red text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-red-700" onclick="finalize(1)">1</button>
-        </div>
-        
-        <div id="gifContainer" class="hidden p-6 bg-white rounded-xl shadow-lg text-center">
-            <div class="loading-spinner"></div>
-            <p class="text-gray-700 font-medium mb-4">Préparation du tripkik animé...</p>
-            <img id="gifImage" class="gif-preview rounded-lg border-2 border-gray-200" alt="Preuve d'évaluation animée">
-        </div>
+            <div id="scoreBtns" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+                <button class="btn-score bg-reunion-blue text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-blue-700" onclick="finalize(4)">4</button>
+                <button class="btn-score bg-reunion-green text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-green-700" onclick="finalize(3)">3</button>
+                <button class="btn-score bg-reunion-yellow text-gray-900 p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-yellow-600" onclick="finalize(2)">2</button>
+                <button class="btn-score bg-reunion-red text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-red-700" onclick="finalize(1)">1</button>
+            </div>
+            
+            <div id="gifContainer" class="hidden p-6 bg-white rounded-xl shadow-lg text-center">
+                <div class="loading-spinner"></div>
+                <p class="text-gray-700 font-medium mb-4">Préparation du tripkik animé...</p>
+                <img id="gifImage" class="gif-preview rounded-lg border-2 border-gray-200" alt="Preuve d'évaluation animée">
+                <a id="downloadLink" class="hidden mt-4 inline-block bg-reunion-red text-white font-bold py-2 px-6 rounded-lg hover:bg-red-700 transition" download="tripkik_preuve.gif">
+                    Télécharger le Tripkik.gif
+                </a>
+            </div>
+        </section>
+
+        <section id="historique-view" class="hidden">
+            <h2 class="text-2xl font-bold mb-4 text-center text-reunion-blue">Historique des Tripkiks (Stats Locales)</h2>
+            <div id="historyList" class="space-y-3">
+                <p class="text-gray-500 text-center" id="emptyHistory">Aucun tripkik archivé pour le moment.</p>
+            </div>
+        </section>
     </main>
 
     <script>
@@ -92,8 +87,34 @@
         const scoreBtns = document.getElementById('scoreBtns');
         const gifContainer = document.getElementById('gifContainer');
         const gifImage = document.getElementById('gifImage');
-        
+        const downloadLink = document.getElementById('downloadLink');
+
         let step = 0, cameraReady = false, tripkik = { frames: [] };
+        
+        // Mappage Score -> Emoji
+        const SCORE_EMOJI = { 4: '⭐', 3: '👍', 2: '🤔', 1: '🚨' };
+
+        // --- GESTION DES VUES (Simple Routage par Hash) ---
+        const updateView = () => {
+            const hash = window.location.hash || '#home';
+            document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
+            const target = document.querySelector(hash + '-view');
+            if (target) {
+                target.classList.remove('hidden');
+            }
+            if (hash === '#historique') {
+                renderHistory();
+            } else {
+                // S'assurer que la caméra se relance si on revient à la home et qu'elle n'est pas déjà active
+                if (!cameraReady && step === 0) { 
+                    statusDiv.innerText = 'Cliquez sur le bouton pour démarrer et autoriser la caméra.';
+                    mainBtn.innerText = 'Prêt ? (Démarre la Cam)';
+                }
+            }
+        };
+        window.addEventListener('hashchange', updateView);
+        window.addEventListener('load', updateView);
+
 
         // --- GESTION DE LA CAMÉRA (Initialisation et Attente des Métadonnées) ---
         const startCamera = () => new Promise(async (resolve, reject) => {
@@ -103,13 +124,12 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 video.srcObject = stream;
                 
-                // CORRECTION CRITIQUE: Attend l'événement pour garantir les dimensions non-nulles
                 video.onloadedmetadata = () => {
                     video.classList.remove('hidden');
                     cameraReady = true;
                     step = 1; 
                     statusDiv.innerHTML = '<span class="text-reunion-blue">Allez Go !</span> Étape 1: Capture l\'énoncé.';
-                    mainBtn.innerText = 'Go !'; // Nouveau nom de bouton pour l'étape 1
+                    mainBtn.innerText = 'Go !'; // Nom du bouton Étape 1
                     mainBtn.disabled = false;
                     mainBtn.classList.remove('bg-reunion-green');
                     mainBtn.classList.add('bg-reunion-blue');
@@ -128,35 +148,54 @@
         });
 
         // Fonction sécurisée pour capturer une frame
-        const captureFrame = () => {
+        const captureFrame = (score = null) => {
             if (video.videoWidth === 0 || video.videoHeight === 0) {
                 throw new Error("Dimensions vidéo nulles. Échec de la capture.");
             }
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth; 
             canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // --- INCRUSTATION DU TEXTE (Si score est fourni) ---
+            if (score !== null) {
+                const emoji = SCORE_EMOJI[score];
+                const text = `NOTE: ${score} ${emoji}`;
+                const fontSize = canvas.height * 0.08;
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; // Fond semi-transparent
+                ctx.fillRect(0, canvas.height - fontSize - 10, canvas.width, fontSize + 10);
+                
+                ctx.font = `${fontSize}px Poppins, sans-serif`;
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'right';
+                ctx.fillText(text, canvas.width - 20, canvas.height - 10);
+            }
+            
             return canvas;
         };
 
         // --- COMPILATION ET CONTRÔLE DE FRÉQUENCE VARIABLE (GIF du tripkik) ---
-        const compileGifProof = () => new Promise(resolve => {
+        const compileGifProof = (finalScore) => new Promise(resolve => {
             const duration_ms = tripkik.response - tripkik.start;
             const max_duration_ms = 3000; 
             
             const delay1 = Math.min(duration_ms, max_duration_ms); 
             const delay2 = 1000; 
 
+            // Ré-capture de la dernière frame AVEC l'incrustation de la note
+            tripkik.frames[2] = { frame: captureFrame(finalScore), delay: 1500 }; 
+            
             tripkik.frames[0].delay = delay1;
             tripkik.frames[1].delay = delay2;
-            tripkik.frames[2].delay = 1500; 
-
+            
             const gif = new GIF({
                 workers: 2, 
                 quality: 10,
                 width: tripkik.frames[0].frame.width,
                 height: tripkik.frames[0].frame.height,
-                workerScript: 'https://cdn.jsdelivr.net/npm/gif.js/dist/gif.worker.js'
+                workerScript: './gif.worker.js' // Doit être local
             });
 
             tripkik.frames.forEach(item => {
@@ -169,14 +208,12 @@
                 gifContainer.querySelector('p').innerText = 'Tripkik généré !';
                 gifContainer.querySelector('.loading-spinner').classList.add('hidden'); 
                 
-                const reader = new FileReader();
-                reader.readAsDataURL(blob);
-                reader.onloadend = () => {
-                    tripkik.gif_base64 = reader.result;
-                    scoreBtns.classList.remove('hidden');
-                    statusDiv.innerHTML = `<span class="font-bold text-reunion-green">Note le tripkik !</span> Recommandation IA: ${tripkik.api_result.ia_recommendation}.`;
-                    resolve();
-                };
+                // Active le lien de téléchargement
+                downloadLink.href = gifURL;
+                downloadLink.classList.remove('hidden');
+                downloadLink.setAttribute('download', `tripkik_${tripkik.api_result.problem_id}_${finalScore}.gif`);
+                
+                resolve();
             });
 
             gif.render();
@@ -186,7 +223,8 @@
         mainBtn.onclick = async () => {
             try {
                 if (!cameraReady) {
-                    await startCamera(); // Attente que la caméra soit prête
+                    await startCamera(); 
+                    if (!cameraReady) return;
                 } 
                 
                 const time = Date.now();
@@ -195,7 +233,7 @@
                     tripkik.start = time;
                     tripkik.frames = [{ frame: captureFrame(), delay: 0 }]; // Image 1
                     step = 2; 
-                    mainBtn.innerText = 'Ok !?'; // Nouveau nom
+                    mainBtn.innerText = 'Ok !?'; 
                     statusDiv.innerHTML = '<span class="text-reunion-green">Ok !?</span> Étape 2: Temps enregistré.';
                     mainBtn.classList.remove('bg-reunion-blue');
                     mainBtn.classList.add('bg-reunion-green'); 
@@ -203,26 +241,25 @@
                     tripkik.response = time; 
                     tripkik.frames.push({ frame: captureFrame(), delay: 0 }); // Image 2
                     step = 3; 
-                    mainBtn.innerText = 'Stop !'; // Nouveau nom
+                    mainBtn.innerText = 'Stop !'; 
                     statusDiv.innerHTML = '<span class="text-reunion-red">Stop !</span> Étape 3: Résultat. Noter.';
                     mainBtn.classList.remove('bg-reunion-green');
                     mainBtn.classList.add('bg-reunion-red'); 
                 } else if (step === 3) {
-                    // Étape 3: Capture, Compilation GIF, et Affichage Notation
+                    // Étape 3: Capture et préparation notation
                     tripkik.end = time;
-                    tripkik.frames.push({ frame: captureFrame(), delay: 0 }); // Image 3
+                    tripkik.frames.push({ frame: captureFrame(), delay: 0 }); // Image 3 (Sans texte encore)
                     
-                    statusDiv.innerHTML = '<span class="text-reunion-yellow">Création du tripkik...</span>';
+                    statusDiv.innerHTML = 'Notation IA en cours...';
                     mainBtn.classList.add('hidden');
-                    gifContainer.classList.remove('hidden');
-                    gifContainer.querySelector('.loading-spinner').classList.remove('hidden'); 
-                    gifContainer.querySelector('p').innerText = 'Préparation du tripkik animé...';
                     
                     // Simulation API
                     const result = { ia_recommendation: 3, status: 'Juste', problem_id: time };
                     tripkik.api_result = result;
 
-                    await compileGifProof(); 
+                    // Affichage des boutons de score pour le choix final
+                    scoreBtns.classList.remove('hidden');
+                    statusDiv.innerHTML = `<span class="font-bold text-reunion-green">Note le tripkik !</span> Recommandation IA: ${tripkik.api_result.ia_recommendation}.`;
                 }
             } catch (e) {
                 console.error("Erreur critique dans le processus:", e);
@@ -233,22 +270,61 @@
             }
         };
 
-        // --- FINALISATION ET STOCKAGE LOCAL (Archivage du tripkik) ---
-        const finalize = (score) => {
+        // --- FINALISATION ET STOCKAGE LOCAL (Archivage et Téléchargement) ---
+        const finalize = async (score) => {
+            // Désactiver les boutons pendant la compilation
+            scoreBtns.classList.add('hidden');
+            mainBtn.disabled = true;
+
+            // 1. Compilation du GIF avec le score incrusté
+            await compileGifProof(score);
+            
+            // 2. Archivage des métadonnées (sans le GIF lourd)
             const evaluationRecord = {
-                timestamp: new Date().toISOString(),
+                id: tripkik.api_result.problem_id,
+                timestamp: new Date().toLocaleTimeString('fr-FR'),
+                date: new Date().toLocaleDateString('fr-FR'),
                 score: score,
                 duration_s: ((tripkik.response - tripkik.start) / 1000).toFixed(1),
                 ia_reco: tripkik.api_result.ia_recommendation,
-                tripkik_proof_gif: tripkik.gif_base64 
+                // Le lien de téléchargement sera cliqué par l'utilisateur
             };
 
             const history = JSON.parse(localStorage.getItem('tripkik_history') || '[]');
             history.push(evaluationRecord);
             localStorage.setItem('tripkik_history', JSON.stringify(history)); 
 
-            alert(`Tripkik archivé fullstats ! Note: ${score}.`);
-            window.location.reload(); 
+            statusDiv.innerHTML = `<span class="text-reunion-blue font-bold">Tripkik archivé fullstats !</span> Téléchargez la preuve GIF.`;
+            mainBtn.innerText = 'Nouveau Tripkik';
+            mainBtn.classList.remove('hidden');
+            mainBtn.onclick = () => window.location.reload();
+        };
+        
+        // --- RENDU DE LA PAGE HISTORIQUE ---
+        const renderHistory = () => {
+            const listContainer = document.getElementById('historyList');
+            const history = JSON.parse(localStorage.getItem('tripkik_history') || '[]');
+            listContainer.innerHTML = '';
+
+            if (history.length === 0) {
+                listContainer.innerHTML = '<p class="text-gray-500 text-center">Aucun tripkik archivé pour le moment.</p>';
+                return;
+            }
+
+            history.reverse().forEach((record, index) => {
+                const item = document.createElement('div');
+                const emoji = SCORE_EMOJI[record.score] || '';
+                
+                item.className = 'p-3 bg-white rounded-lg shadow-sm border-l-4 border-reunion-blue hover:shadow-md transition';
+                item.innerHTML = `
+                    <p class="font-bold text-lg text-reunion-blue">Évaluation du ${record.date} à ${record.timestamp}</p>
+                    <p class="mt-1 text-sm text-gray-700">
+                        Score final: <span class="font-extrabold">${record.score} ${emoji}</span> / Durée: <span class="font-mono">${record.duration_s}s</span>
+                    </p>
+                    <p class="text-xs text-gray-500">Recommandation IA: ${record.ia_reco}</p>
+                `;
+                listContainer.appendChild(item);
+            });
         };
     </script>
 </body>
