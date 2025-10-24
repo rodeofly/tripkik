@@ -1,0 +1,19 @@
+{
+  "name": "tripkik-app",
+  "version": "1.0.0",
+  "description": "Tripkik: Évaluation triple-clic avec preuve GIF.",
+  "scripts": {
+    "build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
+    "copy-assets": "cp index.html dist/index.html && cp gif.worker.js dist/gif.worker.js && cp script.js dist/script.js",
+    "prod": "npm run build && npm run copy-assets",
+    "start": "python3 -m http.server 8000"
+  },
+  "keywords": ["tailwind", "js", "minimal", "gif"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3"
+  }
+}
