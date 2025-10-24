@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tripkik - L'Évaluation Péi</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gif.js/dist/gif.js"></script> 
+    <style>
+        /* Couleurs du drapeau Réunionnais via variables CSS */
+        :root {
+            --color-reunion-blue: #0077B6;   /* Bleu Océan */
+            --color-reunion-yellow: #FFC107; /* Jaune Soleil */
+            --color-reunion-red: #D80000;    /* Rouge Volcan */
+            --color-reunion-green: #28A745;  /* Vert Nature */
+        }
+        .bg-reunion-blue { background-color: var(--color-reunion-blue); }
+        .text-reunion-blue { color: var(--color-reunion-blue); }
+        .bg-reunion-yellow { background-color: var(--color-reunion-yellow); }
+        .text-reunion-red { color: var(--color-reunion-red); }
+        .bg-reunion-green { background-color: var(--color-reunion-green); }
+
+        body { font-family: 'Poppins', sans-serif; }
+        #camera { 
+            width: 100%; 
+            height: 60vh; 
+            object-fit: cover; 
+            border: 4px solid var(--color-reunion-blue); 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2); 
+        }
+        .btn { transition: all 0.3s ease-in-out; transform: scale(1); border: none; cursor: pointer; }
+        .btn:hover { transform: scale(1.02); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+        .btn:active { transform: scale(0.98); }
+        .btn-score { border: 2px solid transparent; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-score:hover { border-color: rgba(255,255,255,0.8); }
+
+        /* Style pour l'indicateur de chargement GIF */
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--color-reunion-yellow);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .gif-preview { display: block; margin: 20px auto; max-width: 100%; }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    
+    <header class="bg-reunion-blue text-white p-6 shadow-lg text-center relative z-10">
+        <h1 class="text-3xl font-bold tracking-wide">Tripkik</h1>
+        <p class="text-lg mt-1 italic opacity-90">Pas content ? Tripkik !</p>
+    </header>
+
+    <main id="app" class="flex-grow p-4 md:p-8 space-y-6 max-w-2xl mx-auto w-full">
+        <video id="camera" autoplay class="rounded-xl shadow-lg hidden"></video>
+        
+        <div id="status" class="bg-reunion-yellow text-gray-900 p-4 rounded-lg font-semibold text-center text-lg shadow-md transition-all duration-300 ease-in-out">
+            Cliquez sur le bouton pour démarrer et autoriser la caméra.
+        </div>
+
+        <button id="mainBtn" class="btn w-full bg-reunion-green text-white p-5 rounded-xl text-xl font-bold uppercase tracking-wider shadow-lg hover:bg-green-700">
+            Prêt ? (Démarre la Cam)
+        </button>
+
+        <div id="scoreBtns" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+            <button class="btn-score bg-reunion-blue text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-blue-700" onclick="finalize(4)">4</button>
+            <button class="btn-score bg-reunion-green text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-green-700" onclick="finalize(3)">3</button>
+            <button class="btn-score bg-reunion-yellow text-gray-900 p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-yellow-600" onclick="finalize(2)">2</button>
+            <button class="btn-score bg-reunion-red text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-red-700" onclick="finalize(1)">1</button>
+        </div>
+        
+        <div id="gifContainer" class="hidden p-6 bg-white rounded-xl shadow-lg text-center">
+            <div class="loading-spinner"></div>
+            <p class="text-gray-700 font-medium mb-4">Préparation du tripkik animé...</p>
+            <img id="gifImage" class="gif-preview rounded-lg border-2 border-gray-200" alt="Preuve d'évaluation animée">
+        </div>
+    </main>
+
+    <script>
+        const video = document.getElementById('camera');
+        const mainBtn = document.getElementById('mainBtn');
+        const statusDiv = document.getElementById('status');
+        const scoreBtns = document.getElementById('scoreBtns');
+        const gifContainer = document.getElementById('gifContainer');
+        const gifImage = document.getElementById('gifImage');
+        
+        let step = 0, cameraReady = false, tripkik = { frames: [] };
+
+        // --- GESTION DE LA CAMÉRA (Initialisation et Attente des Métadonnées) ---
+        const startCamera = () => new Promise(async (resolve, reject) => {
+            statusDiv.innerText = 'Demande d\'accès à la caméra... Un instant !';
+            mainBtn.disabled = true;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = stream;
+                
+                // CORRECTION CRITIQUE: Attend l'événement pour garantir les dimensions non-nulles
+                video.onloadedmetadata = () => {
+                    video.classList.remove('hidden');
+                    cameraReady = true;
+                    step = 1; 
+                    statusDiv.innerHTML = '<span class="text-reunion-blue">Allez Go !</span> Étape 1: Capture l\'énoncé.';
+                    mainBtn.innerText = 'Go !'; // Nouveau nom de bouton pour l'étape 1
+                    mainBtn.disabled = false;
+                    mainBtn.classList.remove('bg-reunion-green');
+                    mainBtn.classList.add('bg-reunion-blue');
+                    resolve(); 
+                };
+                video.onerror = reject;
+                
+            } catch (err) {
+                console.error("Erreur d'accès à la caméra:", err);
+                cameraReady = false;
+                video.classList.add('hidden');
+                statusDiv.innerHTML = `<span class="text-reunion-red font-bold">Autorisation caméra refusée.</span> <button id="retryCam" class="text-blue-600 underline">cliquez ici pour réessayer</button>.`;
+                document.getElementById('retryCam').onclick = () => startCamera().catch(() => {});
+                reject(err);
+            }
+        });
+
+        // Fonction sécurisée pour capturer une frame
+        const captureFrame = () => {
+            if (video.videoWidth === 0 || video.videoHeight === 0) {
+                throw new Error("Dimensions vidéo nulles. Échec de la capture.");
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth; 
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas;
+        };
+
+        // --- COMPILATION ET CONTRÔLE DE FRÉQUENCE VARIABLE (GIF du tripkik) ---
+        const compileGifProof = () => new Promise(resolve => {
+            const duration_ms = tripkik.response - tripkik.start;
+            const max_duration_ms = 3000; 
+            
+            const delay1 = Math.min(duration_ms, max_duration_ms); 
+            const delay2 = 1000; 
+
+            tripkik.frames[0].delay = delay1;
+            tripkik.frames[1].delay = delay2;
+            tripkik.frames[2].delay = 1500; 
+
+            const gif = new GIF({
+                workers: 2, 
+                quality: 10,
+                width: tripkik.frames[0].frame.width,
+                height: tripkik.frames[0].frame.height,
+                workerScript: 'https://cdn.jsdelivr.net/npm/gif.js/dist/gif.worker.js'
+            });
+
+            tripkik.frames.forEach(item => {
+                gif.addFrame(item.frame.getContext('2d'), { delay: item.delay, copy: true });
+            });
+
+            gif.on('finished', (blob) => {
+                const gifURL = URL.createObjectURL(blob);
+                gifImage.src = gifURL;
+                gifContainer.querySelector('p').innerText = 'Tripkik généré !';
+                gifContainer.querySelector('.loading-spinner').classList.add('hidden'); 
+                
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = () => {
+                    tripkik.gif_base64 = reader.result;
+                    scoreBtns.classList.remove('hidden');
+                    statusDiv.innerHTML = `<span class="font-bold text-reunion-green">Note le tripkik !</span> Recommandation IA: ${tripkik.api_result.ia_recommendation}.`;
+                    resolve();
+                };
+            });
+
+            gif.render();
+        });
+
+        // --- LOGIQUE DU TRIPLE CLIC SÉQUENTIEL ---
+        mainBtn.onclick = async () => {
+            try {
+                if (!cameraReady) {
+                    await startCamera(); // Attente que la caméra soit prête
+                } 
+                
+                const time = Date.now();
+                
+                if (step === 1) { 
+                    tripkik.start = time;
+                    tripkik.frames = [{ frame: captureFrame(), delay: 0 }]; // Image 1
+                    step = 2; 
+                    mainBtn.innerText = 'Ok !?'; // Nouveau nom
+                    statusDiv.innerHTML = '<span class="text-reunion-green">Ok !?</span> Étape 2: Temps enregistré.';
+                    mainBtn.classList.remove('bg-reunion-blue');
+                    mainBtn.classList.add('bg-reunion-green'); 
+                } else if (step === 2) { 
+                    tripkik.response = time; 
+                    tripkik.frames.push({ frame: captureFrame(), delay: 0 }); // Image 2
+                    step = 3; 
+                    mainBtn.innerText = 'Stop !'; // Nouveau nom
+                    statusDiv.innerHTML = '<span class="text-reunion-red">Stop !</span> Étape 3: Résultat. Noter.';
+                    mainBtn.classList.remove('bg-reunion-green');
+                    mainBtn.classList.add('bg-reunion-red'); 
+                } else if (step === 3) {
+                    // Étape 3: Capture, Compilation GIF, et Affichage Notation
+                    tripkik.end = time;
+                    tripkik.frames.push({ frame: captureFrame(), delay: 0 }); // Image 3
+                    
+                    statusDiv.innerHTML = '<span class="text-reunion-yellow">Création du tripkik...</span>';
+                    mainBtn.classList.add('hidden');
+                    gifContainer.classList.remove('hidden');
+                    gifContainer.querySelector('.loading-spinner').classList.remove('hidden'); 
+                    gifContainer.querySelector('p').innerText = 'Préparation du tripkik animé...';
+                    
+                    // Simulation API
+                    const result = { ia_recommendation: 3, status: 'Juste', problem_id: time };
+                    tripkik.api_result = result;
+
+                    await compileGifProof(); 
+                }
+            } catch (e) {
+                console.error("Erreur critique dans le processus:", e);
+                statusDiv.innerHTML = `<span class="text-reunion-red font-bold">Erreur critique : ${e.message}. Redémarrer Tripkik.</span>`;
+                mainBtn.classList.remove('hidden');
+                mainBtn.innerText = "Redémarrer Tripkik";
+                mainBtn.onclick = () => window.location.reload();
+            }
+        };
+
+        // --- FINALISATION ET STOCKAGE LOCAL (Archivage du tripkik) ---
+        const finalize = (score) => {
+            const evaluationRecord = {
+                timestamp: new Date().toISOString(),
+                score: score,
+                duration_s: ((tripkik.response - tripkik.start) / 1000).toFixed(1),
+                ia_reco: tripkik.api_result.ia_recommendation,
+                tripkik_proof_gif: tripkik.gif_base64 
+            };
+
+            const history = JSON.parse(localStorage.getItem('tripkik_history') || '[]');
+            history.push(evaluationRecord);
+            localStorage.setItem('tripkik_history', JSON.stringify(history)); 
+
+            alert(`Tripkik archivé fullstats ! Note: ${score}.`);
+            window.location.reload(); 
+        };
+    </script>
+</body>
+</html>
