@@ -1,8 +1,8 @@
 // script.js
 
 const video = document.getElementById('camera');
-const mainBtn = document.getElementById('mainBtn'); // Le bouton flottant
-const statusDiv = document.getElementById('status'); // Texte de statut simple
+const mainBtn = document.getElementById('mainBtn');
+const statusDiv = document.getElementById('status');
 const scoreBtns = document.getElementById('scoreBtns');
 const gifContainer = document.getElementById('gifContainer');
 const gifImage = document.getElementById('gifImage');
@@ -10,6 +10,7 @@ const downloadLink = document.getElementById('downloadLink');
 
 let step = 0, cameraReady = false, tripkik = { frames: [] };
 const SCORE_EMOJI = { 4: '⭐', 3: '👍', 2: '🤔', 1: '🚨' };
+const RESTART_ICON = '🔄'; // Emoji flèche circulaire
 
 // --- GESTION DES VUES (Simple Routage par Hash) ---
 const updateView = () => {
@@ -20,28 +21,33 @@ const updateView = () => {
         target.classList.remove('hidden');
     }
 
-    // Réinitialise l'état du bouton et de la caméra si on revient à l'accueil
     if (hash === '#home') {
+        // Logique pour s'assurer que le bouton d'accueil est remplacé par "Prêt ?"
         if (!cameraReady && step === 0) { 
-            statusDiv.innerText = 'Prêt à démarrer ?';
+            statusDiv.innerText = 'Cliquez sur le bouton pour démarrer et autoriser la caméra.';
             mainBtn.innerText = 'Prêt ?';
-            mainBtn.classList.remove('hidden'); // S'assurer que le bouton est visible
-            mainBtn.classList.remove('bg-reunion-blue', 'bg-reunion-red');
-            mainBtn.classList.add('bg-reunion-green'); // Couleur initiale
+            mainBtn.classList.remove('hidden', 'bg-reunion-blue', 'bg-reunion-red', 'bg-gray-700');
+            mainBtn.classList.add('bg-reunion-green');
             mainBtn.disabled = false;
+            mainBtn.onclick = mainButtonHandler; // Rétablir le gestionnaire de clic normal
         } else if (cameraReady && step === 1) {
-            // Si la caméra est déjà prête, le bouton doit indiquer "Go !"
             mainBtn.innerText = 'Go !';
             mainBtn.classList.remove('hidden');
-            mainBtn.classList.remove('bg-reunion-green', 'bg-reunion-red');
+            mainBtn.classList.remove('bg-reunion-green', 'bg-reunion-red', 'bg-gray-700');
             mainBtn.classList.add('bg-reunion-blue');
             mainBtn.disabled = false;
+            mainBtn.onclick = mainButtonHandler; 
         } else {
-            // Dans d'autres états (après un tripkik ou en attente de score), cacher ou gérer le bouton différemment
-            // Pour l'instant, on le cache si on n'est pas en début de processus
-            mainBtn.classList.add('hidden');
+             // Si on est dans un état post-tripkik et qu'on revient à l'accueil
+             if (step === 0 && !cameraReady) {
+                 mainBtn.innerText = 'Prêt ?';
+                 mainBtn.classList.remove('hidden', 'bg-reunion-blue', 'bg-reunion-red', 'bg-gray-700');
+                 mainBtn.classList.add('bg-reunion-green');
+                 mainBtn.disabled = false;
+                 mainBtn.onclick = mainButtonHandler; 
+             }
         }
-    } else { // Si on va sur l'historique, on cache le bouton principal
+    } else { 
         mainBtn.classList.add('hidden');
     }
 
@@ -57,20 +63,21 @@ window.addEventListener('load', updateView);
 const startCamera = () => new Promise(async (resolve, reject) => {
     statusDiv.innerText = 'Demande d\'accès à la caméra... Un instant !';
     mainBtn.disabled = true;
-    mainBtn.innerText = '...'; // Indiquer un chargement
     try {
+        // Tentative d'accès à la caméra
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
         video.srcObject = stream;
         
+        // Attendre la garantie que les dimensions sont chargées
         video.onloadedmetadata = () => {
             video.classList.remove('hidden');
             cameraReady = true;
-            step = 1; // Étape "Go !"
-            statusDiv.innerHTML = '<span class="text-reunion-blue font-bold">Caméra active.</span> Quand l\'élève est prêt...';
+            step = 1; 
+            statusDiv.innerHTML = '<span class="text-reunion-blue">Allez Go !</span> Étape 1: Capture l\'énoncé.';
             mainBtn.innerText = 'Go !'; // Nom du bouton Étape 1
             mainBtn.disabled = false;
-            mainBtn.classList.remove('bg-reunion-green', 'bg-reunion-red');
-            mainBtn.classList.add('bg-reunion-blue'); // Couleur pour "Go !"
+            mainBtn.classList.remove('bg-reunion-green', 'bg-reunion-red', 'bg-gray-700');
+            mainBtn.classList.add('bg-reunion-blue');
             resolve(); 
         };
         video.onerror = reject;
@@ -79,11 +86,16 @@ const startCamera = () => new Promise(async (resolve, reject) => {
         console.error("Erreur d'accès à la caméra:", err);
         cameraReady = false;
         video.classList.add('hidden');
-        statusDiv.innerHTML = `<span class="text-reunion-red font-bold">Autorisation caméra refusée.</span> <button id="retryCam" class="text-blue-600 underline">cliquez ici pour réessayer</button>.`;
+        
+        // Message d'erreur avec icône de relance
+        statusDiv.innerHTML = `<span class="text-reunion-red font-bold">Caméra bloquée.</span> <button id="retryCam" class="text-blue-600 underline">${RESTART_ICON} Réessayer</button>.`;
         document.getElementById('retryCam').onclick = () => startCamera().catch(() => {});
+        
         mainBtn.innerText = 'Prêt ?'; // Réinitialiser le bouton si échec
         mainBtn.disabled = false;
-        resolve(); // Résoudre même en cas d'erreur pour ne pas bloquer
+        mainBtn.classList.remove('bg-reunion-blue', 'bg-reunion-red', 'bg-gray-700');
+        mainBtn.classList.add('bg-reunion-green');
+        reject(err);
     }
 });
 
@@ -121,10 +133,9 @@ const compileGifProof = (finalScore) => new Promise(resolve => {
     const duration_ms = tripkik.response - tripkik.start;
     const max_duration_ms = 3000; 
     
-    // Optimisation pour les réseaux sociaux (plus court et nerveux)
     const delay1 = Math.min(duration_ms, max_duration_ms); 
-    const delay2 = 750; // Transition réponse -> résultat réduite
-    
+    const delay2 = 750; 
+
     // Ré-capture de la dernière frame AVEC l'incrustation de la note
     tripkik.frames[2] = { frame: captureFrame(finalScore), delay: 1000 }; 
     
@@ -145,7 +156,6 @@ const compileGifProof = (finalScore) => new Promise(resolve => {
         gifContainer.querySelector('p').innerText = 'Tripkik généré !';
         gifContainer.querySelector('.loading-spinner').classList.add('hidden'); 
         
-        // Active le lien de téléchargement
         downloadLink.href = gifURL;
         downloadLink.classList.remove('hidden');
         downloadLink.setAttribute('download', `tripkik_preuve_${tripkik.api_result.problem_id}_${finalScore}.gif`);
@@ -153,48 +163,53 @@ const compileGifProof = (finalScore) => new Promise(resolve => {
         resolve();
     });
 
+    tripkik.frames.forEach(item => {
+        gif.addFrame(item.frame.getContext('2d'), { delay: item.delay, copy: true });
+    });
+
     gif.render();
 });
 
 // --- LOGIQUE DU BOUTON PRINCIPAL ---
-mainBtn.onclick = async () => {
+const mainButtonHandler = async () => {
     try {
         if (!cameraReady) {
-            // Étape 0: Cliquer sur "Prêt ?" -> Démarrer la caméra
             await startCamera(); 
-            if (!cameraReady) return; // Si la caméra n'a pas pu démarrer
-            // Après startCamera(), step est à 1 et le bouton est "Go !"
-        } else if (step === 1) { 
-            // Étape 1: Cliquer sur "Go !" -> Démarrer le Tripkik
-            tripkik.start = Date.now();
+            if (!cameraReady) return;
+        } 
+        
+        const time = Date.now();
+        
+        if (step === 1) { 
+            // Étape 1: Cliquer sur "Go !" -> Démarrer le Tripkik (la phase de capture réelle)
+            tripkik.start = time;
             tripkik.frames = [{ frame: captureFrame(), delay: 0 }]; // Image 1
             step = 2; 
             mainBtn.innerText = 'Ok !?'; 
             statusDiv.innerHTML = '<span class="text-reunion-green font-bold">Top départ !</span> L\'élève est en action.';
-            mainBtn.classList.remove('bg-reunion-blue', 'bg-reunion-red');
-            mainBtn.classList.add('bg-reunion-green'); // Couleur pour "Ok !?"
+            mainBtn.classList.remove('bg-reunion-blue');
+            mainBtn.classList.add('bg-reunion-green'); 
         } else if (step === 2) { 
             // Étape 2: Cliquer sur "Ok !?" -> L'élève a répondu
-            tripkik.response = Date.now(); 
+            tripkik.response = time; 
             tripkik.frames.push({ frame: captureFrame(), delay: 0 }); // Image 2
             step = 3; 
             mainBtn.innerText = 'Stop !'; 
             statusDiv.innerHTML = '<span class="text-reunion-red font-bold">Il a fini !</span> On enregistre le résultat.';
-            mainBtn.classList.remove('bg-reunion-blue', 'bg-reunion-green');
-            mainBtn.classList.add('bg-reunion-red'); // Couleur pour "Stop !"
+            mainBtn.classList.remove('bg-reunion-green');
+            mainBtn.classList.add('bg-reunion-red'); 
         } else if (step === 3) {
-            // Étape 3: Cliquer sur "Stop !" -> Fin du Tripkik, capture finale, compilation GIF et affichage notation
-            tripkik.end = Date.now();
-            tripkik.frames.push({ frame: captureFrame(), delay: 0 }); // Image 3 (Sans texte incrusté initialement)
+            // Étape 3: Cliquer sur "Stop !" -> Fin du Tripkik, cache le bouton, lance la compilation
+            tripkik.end = time;
+            tripkik.frames.push({ frame: captureFrame(), delay: 0 }); // Image 3 (capture finale)
             
-            statusDiv.innerHTML = 'Analyse IA en cours et création du Tripkik...';
-            mainBtn.classList.add('hidden'); // Cache le bouton principal
-            gifContainer.classList.remove('hidden');
-            gifContainer.querySelector('.loading-spinner').classList.remove('hidden'); 
-            gifContainer.querySelector('p').innerText = 'Préparation du tripkik animé...';
+            // CACHE LE BOUTON IMMÉDIATEMENT APRES LE STOP
+            mainBtn.classList.add('hidden');
+            
+            statusDiv.innerHTML = '<span class="text-reunion-yellow">Analyse IA et création du Tripkik...</span>';
             
             // Simulation API
-            const result = { ia_recommendation: 3, status: 'Juste', problem_id: Date.now() };
+            const result = { ia_recommendation: 3, status: 'Juste', problem_id: time };
             tripkik.api_result = result;
 
             // Affichage des boutons de score pour le choix final
@@ -203,24 +218,35 @@ mainBtn.onclick = async () => {
         }
     } catch (e) {
         console.error("Erreur critique dans le processus:", e);
-        statusDiv.innerHTML = `<span class="text-reunion-red font-bold">Erreur critique : ${e.message}. Redémarrer Tripkik.</span>`;
-        mainBtn.classList.remove('hidden');
-        mainBtn.innerText = "Redémarrer Tripkik";
-        mainBtn.onclick = () => window.location.reload();
+        // Utilisation de l'icône de redémarrage (🔄)
+        statusDiv.innerHTML = `<span class="text-reunion-red font-bold">Erreur critique : ${e.message}.</span> <button id="relanceApp" class="text-blue-600 underline">${RESTART_ICON} Redémarrer</button>.`;
+        mainBtn.classList.add('hidden');
+        document.getElementById('relanceApp').onclick = () => window.location.reload();
     }
 };
+mainBtn.onclick = mainButtonHandler;
+
 
 // --- FINALISATION ET STOCKAGE LOCAL (Archivage et Téléchargement) ---
 const finalize = async (score) => {
     scoreBtns.classList.add('hidden');
-    mainBtn.disabled = true; // Empêcher les clics pendant la finalisation
+    mainBtn.disabled = true; 
     statusDiv.innerHTML = `<span class="text-reunion-yellow font-bold">Génération du GIF...</span>`;
 
+    // 1. Compilation du GIF avec le score incrusté
     await compileGifProof(score);
     
-    // Délai de tension après génération du GIF, avant l'affichage final (750ms)
+    // 2. Arrêt de la caméra après la compilation
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop()); // Arrêter le flux
+        video.classList.add('hidden'); // Cacher l'affichage
+    }
+    cameraReady = false; 
+
+    // 3. Délai de tension (750ms)
     await new Promise(resolve => setTimeout(resolve, 750)); 
     
+    // 4. Archivage des métadonnées
     const evaluationRecord = {
         id: tripkik.api_result.problem_id,
         timestamp: new Date().toLocaleTimeString('fr-FR'),
@@ -236,22 +262,21 @@ const finalize = async (score) => {
 
     statusDiv.innerHTML = `<span class="text-reunion-blue font-bold">Tripkik archivé fullstats !</span> Téléchargez la preuve GIF.`;
     
-    // Réinitialiser pour un nouveau tripkik
-    mainBtn.innerText = 'Nouveau Tripkik';
-    mainBtn.classList.remove('hidden');
-    mainBtn.classList.remove('bg-reunion-blue', 'bg-reunion-red');
-    mainBtn.classList.add('bg-reunion-green'); // Couleur de départ
+    // 5. Changement du bouton principal en bouton "MAISON"
+    mainBtn.innerText = '🏠'; // L'icône de maison
+    mainBtn.classList.remove('hidden', 'bg-reunion-blue', 'bg-reunion-red', 'bg-reunion-green');
+    mainBtn.classList.add('bg-gray-700'); // Couleur neutre pour le bouton d'accueil
+    mainBtn.onclick = () => window.location.hash = '#home'; // Le ramener à la page d'accueil
     mainBtn.disabled = false;
-    step = 0; // Retour à l'étape initiale
-    cameraReady = false; // Désactiver la caméra pour la prochaine fois
-    video.srcObject.getTracks().forEach(track => track.stop()); // Arrêter la caméra
-    video.classList.add('hidden'); // Cacher l'affichage de la caméra
-
-    mainBtn.onclick = () => window.location.reload(); // Pour le prochain tripkik, recharger la page
+    step = 0; // Réinitialiser le processus
+    
+    // Afficher le bouton de la maison
+    mainBtn.classList.remove('hidden');
 };
-
+        
 // --- RENDU DE LA PAGE HISTORIQUE ---
 const renderHistory = () => {
+    // ... (Code renderHistory inchangé) ...
     const listContainer = document.getElementById('historyList');
     const history = JSON.parse(localStorage.getItem('tripkik_history') || '[]');
     listContainer.innerHTML = '';
