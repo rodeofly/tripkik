@@ -365,7 +365,7 @@ const finalize = async (score) => {
     setStatus('<span class="text-reunion-blue font-bold">Tripkik archivé fullstats !</span> Téléchargez la preuve GIF.', { html: true });
 
     setMainButtonState({
-        text: 'Home',
+        text: '🏠',
         color: 'bg-gray-700',
         comment: 'Retour à l\'accueil.',
         hidden: false,
