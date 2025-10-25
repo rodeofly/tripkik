@@ -179,7 +179,7 @@ const startCamera = () => new Promise(async (resolve, reject) => {
             setTimeout(() => {
                 cameraReady = true;
                 step = 1;
-                setStatus('<span class="text-reunion-blue">Allez Go !</span> Étape 1: Capture l\'énoncé.', { html: true });
+                setStatus('');
                 setMainButtonState({
                     text: 'Go !',
                     color: 'bg-reunion-blue',
@@ -264,7 +264,7 @@ async function mainButtonHandler() {
             tripkik.end = now;
             tripkik.frames.push({ frame: finalFrame, delay: 0 });
             finalSnapshot.src = finalFrame.toDataURL('image/png');
-            finalSnapshot.classList.add('hidden');
+            finalSnapshot.classList.remove('hidden');
             stopCamera();
             setMainButtonState({
                 text: 'Stop !',
@@ -342,6 +342,9 @@ const finalize = async (score) => {
     resetGifPreview();
 
     await compileGifProof(score);
+
+    finalSnapshot.classList.add('hidden');
+    finalSnapshot.src = '';
 
     if (video.srcObject) {
         stopCamera();
