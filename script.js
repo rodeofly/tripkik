@@ -267,9 +267,6 @@ async function mainButtonHandler() {
             finalSnapshot.classList.remove('hidden');
             stopCamera();
             setMainButtonState({
-                text: 'Stop !',
-                color: 'bg-reunion-red',
-                comment: '',
                 hidden: true,
                 disabled: true,
                 onClick: noop
@@ -368,7 +365,7 @@ const finalize = async (score) => {
     setStatus('<span class="text-reunion-blue font-bold">Tripkik archivé fullstats !</span> Téléchargez la preuve GIF.', { html: true });
 
     setMainButtonState({
-        text: '🏠',
+        text: 'Home',
         color: 'bg-gray-700',
         comment: 'Retour à l\'accueil.',
         hidden: false,
