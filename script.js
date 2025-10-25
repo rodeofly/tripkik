@@ -22,6 +22,23 @@ const RESTART_ICON = '🔄';
 const BUTTON_COLOR_CLASSES = ['bg-reunion-green', 'bg-reunion-blue', 'bg-reunion-red', 'bg-gray-700'];
 const noop = () => {};
 
+const setStatus = (message, { html = false } = {}) => {
+    if (!statusDiv) {
+        return;
+    }
+    if (!message || !message.trim()) {
+        statusDiv.innerHTML = '';
+        statusDiv.classList.add('hidden');
+        return;
+    }
+    statusDiv.classList.remove('hidden');
+    if (html) {
+        statusDiv.innerHTML = message;
+    } else {
+        statusDiv.innerText = message;
+    }
+};
+
 const setMainButtonState = ({ text, color, comment, hidden = false, disabled = false, onClick }) => {
     if (text !== undefined) {
         mainBtn.innerText = text;
@@ -71,7 +88,7 @@ const resetInterface = () => {
     scoreBtns.classList.add('hidden');
     gifContainer.classList.add('hidden');
     resetGifPreview();
-    statusDiv.innerText = 'Cliquez sur le bouton pour démarrer et autoriser la caméra.';
+    setStatus('');
     setMainButtonState({
         text: 'Prêt ?',
         color: 'bg-reunion-green',
@@ -132,7 +149,7 @@ window.addEventListener('load', () => {
 });
 
 const startCamera = () => new Promise(async (resolve, reject) => {
-    statusDiv.innerText = 'Demande d\'accès à la caméra... Un instant !';
+    setStatus('Demande d\'accès à la caméra... Un instant !');
     setMainButtonState({
         text: 'Prêt ?',
         color: 'bg-reunion-green',
@@ -149,7 +166,7 @@ const startCamera = () => new Promise(async (resolve, reject) => {
         video.onloadedmetadata = () => {
             video.play();
             video.classList.remove('hidden');
-            statusDiv.innerText = 'Initialisation de la caméra... Stabilisation en cours.';
+            setStatus('Initialisation de la caméra... Stabilisation en cours.');
             setMainButtonState({
                 text: 'Stabilisation... ⏳',
                 color: 'bg-reunion-green',
@@ -162,7 +179,7 @@ const startCamera = () => new Promise(async (resolve, reject) => {
             setTimeout(() => {
                 cameraReady = true;
                 step = 1;
-                statusDiv.innerHTML = '<span class="text-reunion-blue">Allez Go !</span> Étape 1: Capture l\'énoncé.';
+                setStatus('<span class="text-reunion-blue">Allez Go !</span> Étape 1: Capture l\'énoncé.', { html: true });
                 setMainButtonState({
                     text: 'Go !',
                     color: 'bg-reunion-blue',
@@ -178,7 +195,7 @@ const startCamera = () => new Promise(async (resolve, reject) => {
     } catch (err) {
         console.error("Erreur d'accès à la caméra:", err);
         stopCamera();
-        statusDiv.innerHTML = `<span class="text-reunion-red font-bold">Caméra bloquée.</span> <button id="retryCam" class="text-blue-600 underline">${RESTART_ICON} Réessayer</button>.`;
+        setStatus(`<span class="text-reunion-red font-bold">Caméra bloquée.</span> <button id="retryCam" class="text-blue-600 underline">${RESTART_ICON} Réessayer</button>.`, { html: true });
         document.getElementById('retryCam').onclick = () => startCamera().catch(() => {});
         setMainButtonState({
             text: 'Prêt ?',
@@ -220,7 +237,7 @@ async function mainButtonHandler() {
             tripkik.start = now;
             tripkik.frames = [{ frame: captureFrame(), delay: 0 }];
             step = 2;
-            statusDiv.innerHTML = '<span class="text-reunion-green font-bold">Top départ !</span> L\'élève est en action.';
+            setStatus('<span class="text-reunion-green font-bold">Top départ !</span> L\'élève est en action.', { html: true });
             setMainButtonState({
                 text: 'Ok !?',
                 color: 'bg-reunion-green',
@@ -233,7 +250,7 @@ async function mainButtonHandler() {
             tripkik.response = now;
             tripkik.frames.push({ frame: captureFrame(), delay: 0 });
             step = 3;
-            statusDiv.innerHTML = '<span class="text-reunion-red font-bold">Il a fini !</span> Prépare la preuve finale.';
+            setStatus('<span class="text-reunion-red font-bold">Il a fini !</span> Prépare la preuve finale.', { html: true });
             setMainButtonState({
                 text: 'Stop !',
                 color: 'bg-reunion-red',
@@ -247,7 +264,7 @@ async function mainButtonHandler() {
             tripkik.end = now;
             tripkik.frames.push({ frame: finalFrame, delay: 0 });
             finalSnapshot.src = finalFrame.toDataURL('image/png');
-            finalSnapshot.classList.remove('hidden');
+            finalSnapshot.classList.add('hidden');
             stopCamera();
             setMainButtonState({
                 text: 'Stop !',
@@ -260,11 +277,11 @@ async function mainButtonHandler() {
             scoreBtns.classList.remove('hidden');
             // Simulation API
             tripkik.api_result = { ia_recommendation: 3, status: 'Juste', problem_id: now };
-            statusDiv.innerHTML = `<span class="font-bold text-reunion-yellow">Note le tripkik !</span> Recommandation IA: ${tripkik.api_result.ia_recommendation}.`;
+            setStatus(`<span class="font-bold text-reunion-yellow">Note le tripkik !</span> Recommandation IA: ${tripkik.api_result.ia_recommendation}.`, { html: true });
         }
     } catch (e) {
         console.error('Erreur critique dans le processus:', e);
-        statusDiv.innerHTML = `<span class="text-reunion-red font-bold">Erreur critique : ${e.message}.</span> <button id="relanceApp" class="text-blue-600 underline">${RESTART_ICON} Redémarrer</button>.`;
+        setStatus(`<span class="text-reunion-red font-bold">Erreur critique : ${e.message}.</span> <button id="relanceApp" class="text-blue-600 underline">${RESTART_ICON} Redémarrer</button>.`, { html: true });
         setMainButtonState({ text: 'Prêt ?', color: 'bg-reunion-green', comment: 'Relance l\'appli.', hidden: true, disabled: true, onClick: noop });
         document.getElementById('relanceApp').onclick = () => {
             window.location.hash = '#home';
@@ -320,7 +337,7 @@ const compileGifProof = (finalScore) => new Promise(resolve => {
 
 const finalize = async (score) => {
     scoreBtns.classList.add('hidden');
-    statusDiv.innerHTML = `<span class="text-reunion-yellow font-bold">Génération du GIF...</span>`;
+    setStatus('<span class="text-reunion-yellow font-bold">Génération du GIF...</span>', { html: true });
     gifContainer.classList.remove('hidden');
     resetGifPreview();
 
@@ -345,7 +362,7 @@ const finalize = async (score) => {
     history.push(evaluationRecord);
     localStorage.setItem('tripkik_history', JSON.stringify(history));
 
-    statusDiv.innerHTML = `<span class="text-reunion-blue font-bold">Tripkik archivé fullstats !</span> Téléchargez la preuve GIF.`;
+    setStatus('<span class="text-reunion-blue font-bold">Tripkik archivé fullstats !</span> Téléchargez la preuve GIF.', { html: true });
 
     setMainButtonState({
         text: '🏠',
