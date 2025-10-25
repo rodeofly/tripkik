@@ -16,11 +16,18 @@
         .gif-preview { display: block; margin: 20px auto; max-width: 100%; }
 
         /* Styles spécifiques pour le bouton rond flottant */
-        #mainBtn {
+        #mainBtnWrapper {
             position: fixed;
-            bottom: 80px; /* Au-dessus du footer */
+            bottom: 90px;
             left: 50%;
             transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 20;
+            gap: 12px;
+        }
+        #mainBtn {
             width: 80px; /* Taille du cercle */
             height: 80px;
             border-radius: 50%;
@@ -30,18 +37,20 @@
             font-size: 1.25rem; /* text-xl */
             font-weight: bold;
             color: white;
-            z-index: 20; /* Au-dessus de tout le reste */
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             transition: all 0.2s ease-in-out;
             cursor: pointer;
             border: 4px solid white; /* Effet appareil photo */
         }
         #mainBtn:hover {
-            transform: translateX(-50%) scale(1.05);
+            transform: scale(1.05);
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
         #mainBtn:active {
-            transform: translateX(-50%) scale(0.95);
+            transform: scale(0.95);
+        }
+        #mainBtnComment {
+            backdrop-filter: blur(2px);
         }
 
         /* Style pour l'indicateur de chargement GIF (qui était dans output.css mais je le remets ici pour l'instant) */
@@ -76,16 +85,29 @@
         <section id="home-view">
             <h2 class="text-2xl font-bold mb-4 text-center">Évaluation Flash</h2>
             <video id="camera" autoplay class="rounded-xl shadow-lg hidden"></video>
+            <img id="finalSnapshot" class="rounded-xl shadow-lg hidden mt-4 w-full object-cover" alt="Dernière capture du tripkik">
             
             <p id="status" class="text-gray-700 font-semibold text-center text-lg mt-4 transition-all duration-300 ease-in-out">
                 Prêt à démarrer ?
             </p>
 
             <div id="scoreBtns" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-                <button class="btn-score bg-reunion-blue text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-blue-700" onclick="finalize(4)">4</button>
-                <button class="btn-score bg-reunion-green text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-green-700" onclick="finalize(3)">3</button>
-                <button class="btn-score bg-reunion-yellow text-gray-900 p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-yellow-600" onclick="finalize(2)">2</button>
-                <button class="btn-score bg-reunion-red text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-red-700" onclick="finalize(1)">1</button>
+                <button class="btn-score bg-reunion-blue text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-blue-700 flex flex-col items-center gap-2" onclick="finalize(4)">
+                    <span class="text-3xl leading-none">4</span>
+                    <span class="text-xs font-semibold uppercase tracking-wide">Génial</span>
+                </button>
+                <button class="btn-score bg-reunion-green text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-green-700 flex flex-col items-center gap-2" onclick="finalize(3)">
+                    <span class="text-3xl leading-none">3</span>
+                    <span class="text-xs font-semibold uppercase tracking-wide">Bien joué</span>
+                </button>
+                <button class="btn-score bg-reunion-yellow text-gray-900 p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-yellow-600 flex flex-col items-center gap-2" onclick="finalize(2)">
+                    <span class="text-3xl leading-none">2</span>
+                    <span class="text-xs font-semibold uppercase tracking-wide">À corriger</span>
+                </button>
+                <button class="btn-score bg-reunion-red text-white p-5 rounded-xl text-2xl font-extrabold shadow-md hover:bg-red-700 flex flex-col items-center gap-2" onclick="finalize(1)">
+                    <span class="text-3xl leading-none">1</span>
+                    <span class="text-xs font-semibold uppercase tracking-wide">SOS</span>
+                </button>
             </div>
             
             <div id="gifContainer" class="hidden p-6 bg-white rounded-xl shadow-lg text-center">
@@ -106,7 +128,10 @@
         </section>
     </main>
 
-    <button id="mainBtn" class="bg-reunion-green">Prêt ?</button>
+    <div id="mainBtnWrapper">
+        <button id="mainBtn" class="bg-reunion-green">Prêt ?</button>
+        <p id="mainBtnComment" class="text-sm font-semibold text-gray-700 bg-white bg-opacity-90 px-4 py-1 rounded-full shadow-md mt-3">Lance la caméra pour commencer.</p>
+    </div>
 
     <footer class="fixed bottom-0 left-0 w-full bg-reunion-blue bg-opacity-80 text-white p-3 text-center z-10 shadow-lg">
         <div class="max-w-4xl mx-auto flex justify-between items-center text-sm">
