@@ -168,7 +168,7 @@ const startCamera = () => new Promise(async (resolve, reject) => {
             video.classList.remove('hidden');
             setStatus('Initialisation de la caméra... Stabilisation en cours.');
             setMainButtonState({
-                text: 'Stabilisation... ⏳',
+                text: '⏳',
                 color: 'bg-reunion-green',
                 comment: 'Patiente un instant, la caméra se met au point.',
                 hidden: false,
