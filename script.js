@@ -149,18 +149,30 @@ const startCamera = () => new Promise(async (resolve, reject) => {
         video.onloadedmetadata = () => {
             video.play();
             video.classList.remove('hidden');
-            cameraReady = true;
-            step = 1;
-            statusDiv.innerHTML = '<span class="text-reunion-blue">Allez Go !</span> Étape 1: Capture l\'énoncé.';
+            statusDiv.innerText = 'Initialisation de la caméra... Stabilisation en cours.';
             setMainButtonState({
-                text: 'Go !',
-                color: 'bg-reunion-blue',
-                comment: 'Cadre l\'énoncé et capture-le.',
+                text: 'Stabilisation... ⏳',
+                color: 'bg-reunion-green',
+                comment: 'Patiente un instant, la caméra se met au point.',
                 hidden: false,
-                disabled: false,
-                onClick: mainButtonHandler
+                disabled: true,
+                onClick: noop
             });
-            resolve();
+
+            setTimeout(() => {
+                cameraReady = true;
+                step = 1;
+                statusDiv.innerHTML = '<span class="text-reunion-blue">Allez Go !</span> Étape 1: Capture l\'énoncé.';
+                setMainButtonState({
+                    text: 'Go !',
+                    color: 'bg-reunion-blue',
+                    comment: 'Cadre l\'énoncé et capture-le.',
+                    hidden: false,
+                    disabled: false,
+                    onClick: mainButtonHandler
+                });
+                resolve();
+            }, 1200);
         };
         video.onerror = reject;
     } catch (err) {
@@ -199,6 +211,7 @@ async function mainButtonHandler() {
             if (!cameraReady) {
                 return;
             }
+            return;
         }
 
         const now = Date.now();
